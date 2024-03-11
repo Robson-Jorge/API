@@ -73,18 +73,21 @@ class NotesController {
         "notes.title",
         "notes.user_id"
       ])
-      .where("notes.user_id", user_id)  // Onde user_id for igual ao user_id da requisição
-      .whereLike("notes.title", `%${title}%`)   // Onde o título da requisição contém o título da requisição * usando % para dizer que pode ter qualquer coisa antes ou depois
-      .whereIn("name", filterTags)   // Onde o nome estiver dentro da requisição de tags
-      .innerJoin("notes", "notes.id", "tags.note_id")   // InnerJoin entre as tabelas notes e tags e o id da tabela notes for igual ao id da tabela tags
+      .where("notes.user_id", user_id)
+      .where(function() {
+        this.whereRaw("LOWER(notes.title) LIKE ?", `%${title.toLowerCase()}%`)
+      })
+      .whereIn("name", filterTags)
+      .innerJoin("notes", "notes.id", "tags.note_id")
       .groupBy("notes.id")
-      .orderBy("notes.title")   // Ordenando pelo título
+      .orderBy("notes.title")
 
-      
     } else {
       notes = await knex("notes")
       .where({ user_id })
-      .whereLike("title", `%${title}%`)
+      .where(function() {
+        this.whereRaw("LOWER(notes.title) LIKE ?", `%${title.toLowerCase()}%`)
+      })
       .orderBy("title")
     }
 
