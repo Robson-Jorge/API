@@ -101,6 +101,57 @@ class NotesController {
     
     return res.json(notesWithTags)
   }
+ 
+  async update(req, res) {
+    const { id } = req.params
+    let { title, description, links, tags } = req.body
+
+    const database = await knex("notes").where({ id }).first()
+    
+    if (!database) {
+      throw new AppError("Nota não encontrada")
+    }
+    
+    const user_id = req.user.id
+
+    if (database.user_id !== user_id) {
+      throw new AppError("Não autorizado")
+    }
+
+    title = title ?? database.title;
+    description = description ?? database.description;
+
+    await knex.transaction(async (trx) => {
+      await knex("notes")
+        .where({ id })
+        .update({
+          title,
+          description,
+        })
+        .transacting(trx);
+
+      if (links) {
+        await knex("links").where({ note_id: id }).del().transacting(trx);
+        const linksInsert = links.map(link => ({
+          note_id: id,
+          url: link
+        }));
+        await knex("links").insert(linksInsert).transacting(trx);
+      }
+
+      if (tags) {
+        await knex("tags").where({ note_id: id }).del().transacting(trx);
+        const tagsInsert = tags.map(name => ({
+          note_id: id,
+          name: name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase(),
+          user_id
+        }));
+        await knex("tags").insert(tagsInsert).transacting(trx);
+      }
+    });
+
+    return res.json()
+  }
 }
 
 module.exports = NotesController

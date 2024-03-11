@@ -13,5 +13,6 @@ notesRoutes.get("/", notesController.index)
 notesRoutes.get("/:id", notesController.show)
 notesRoutes.post("/", notesController.create)
 notesRoutes.delete("/:id", notesController.delete)
+notesRoutes.put("/:id", notesController.update)
 
 module.exports = notesRoutes
