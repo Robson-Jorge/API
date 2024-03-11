@@ -6,8 +6,7 @@ class NotesController {
     const { title, description, tags, links } = req.body
     const user_id = req.user.id
 
-    // Cadastrar com knex usando insert()
-    const [note_id] = await knex("notes").insert({
+    const [ {note_id} ] = await knex("notes").returning({ note_id: 'id' }).insert({
       title,
       description,
       user_id
@@ -22,7 +21,7 @@ class NotesController {
 
     await knex("links").insert(linksInsert)
 
-    const tadsInsert = tags.map(name => {
+    const tagsInsert = tags.map(name => {
       const normalizedName = name
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -36,7 +35,7 @@ class NotesController {
       }
     })
 
-    await knex("tags").insert(tadsInsert)
+    await knex("tags").insert(tagsInsert)
 
     return res.json()
   }
