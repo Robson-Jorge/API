@@ -1,6 +1,7 @@
 const { hash, compare } = require("bcryptjs")
 const AppError = require("../utils/AppError")
 const knex = require("../database/knex")
+const supabase = require("../configs/supabaseConfig")
 
 class UsersController {
   async create(req, res) {
@@ -62,14 +63,26 @@ class UsersController {
 
     return res.json()
   }
-}
 
-/* métodos de um class controller 
-* index - Get para listar vários registros
-* show - Get para mostrar um único registro 
-* create - Post para criar um novo registro 
-* update - Put para atualizar um registro 
-* delete - Delete para deletar um registro
-*/
+  async delete(req, res) {
+    const user_id = req.user.id
+
+    const user = await knex("users").where({ id: user_id }).first()
+
+    if (user.avatar !== null) {
+      const urlParts = user.avatar.split('/') 
+      const avatarName = urlParts[urlParts.length - 1]
+      await supabase.storage.from("Upload-avatar").remove([
+        avatarName,
+      ])
+    }
+
+    await knex("users").where({ id: user.id }).delete()
+
+    return res.json({
+      message: "Usuário deletado com sucesso!",
+    })
+  }
+}
 
 module.exports = UsersController
