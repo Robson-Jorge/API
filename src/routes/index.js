@@ -12,4 +12,6 @@ routes.use("/notes", notesRouter);
 routes.use("/users", userRouter);
 routes.use("/tags", tagsRouter);
 
+routes.use("/ping", (req, res) => res.json({ pong: true }));
+
 module.exports = routes;
